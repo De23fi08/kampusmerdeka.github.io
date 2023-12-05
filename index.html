@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAJAM</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="static/images/logo2.png" alt="Foto Profil">
+        </div>
+        <div class="title">
+            <h1>Philocalist </h1>
+            <h1>Sistem Deteksi Senjata Otomatis</h1>
+        </div>
+    </header>
+
+    <div class="text-container">
+        <p class="text-block" id="p1">Implementasi Sistem Deteksi Senjata menggunakan YOLOv8 pada Ruang Terbuka untuk Keamanan Masyarakat</p>
+        <p class="text-block" id="p2">Sistem deteksi senjata yang dikembangkan adalah solusi yang memungkinkan pengguna untuk mengambil gambar melalui tombol khusus yang telah disediakan. Dengan menggunakan teknologi YOLOv8, sistem kami dirancang untuk melakukan deteksi potensi ancaman kejahatan seperti pisau, pistol, dan pemukul pada gambar yang diambil melalui kamera. Hal ini memfasilitasi analisis gambar secara langsung, memberikan kemampuan untuk mengidentifikasi objek-objek yang memiliki potensi mengancam keamanan.</p>
+    </div>
+
+    <div class="container">
+        <div class="top-section">
+            <video id="videoElement" autoplay playsinline ></video>
+        </div>
+        <div class="bottom-section">
+            <button id="mulaiDeteksi">Deteksi</button>
+        <button id="resetCamera">Mulai Ulang</button>
+        </div>
+    </div>
+        
+    <div class="profiles-container">
+        <div class="top-section1">
+            <p id="h3">Profile Team</p>
+        </div>
+        <div class="bottom-section1">
+        <div class="profile">
+            <img src="static/images/orang1.jpg" alt="Foto Profil 1">
+            <h2>Alkat Zakaria</h2>
+            <p>Universitas Saintek Muhammadiyah Jakarta</p>
+        </div>
+        <div class="profile">
+            <img src="static/images/orang2.jpg" alt="Foto Profil 2">
+            <h2>Defi Afrilia</h2>
+            <p>STMIK Jakarta STI&K</p>
+        </div>
+        <!-- Tambahkan profile yang lain di sini -->
+        <div class="profile">
+            <img src="static/images/orang3.jpg" alt="Foto Profil 3">
+            <h2>Ria Lindawati</h2>
+            <p>Universitas Bina Sarana Informatika Jakarta</p>
+        </div>
+        <div class="profile">
+            <img src="static/images/orang4.jpg" alt="Foto Profil 4">
+            <h2>Brian Kerta Raharja</h2>
+            <p>Universitas Pancasila</p>
+        </div>
+        <div class="profile">
+            <img src="static/images/orang5.jpg" alt="Foto Profil 5">
+            <h2>Moch. Daffa Ryandhana</h2>
+            <p>Universitas Singaperbangsa Karawang</p>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        let videoStream; // Untuk menyimpan stream video
+
+        async function setupWebcam() {
+        const videoElement = document.getElementById('videoElement');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+                videoStream = stream; // Simpan stream video ke variabel
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupWebcam(); // Pastikan elemen video telah dimuat sebelum mengaksesnya
+            // Menambahkan event listener dan kode lainnya di sini
+        });
+
+        const startAbsensiButton = document.getElementById('mulaiDeteksi');
+        startAbsensiButton.addEventListener('click', async function(){
+            const videoElement = document.getElementById('videoElement');
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            // Menampilkan gambar yang diambil pada bekas tampilan kamera
+            videoElement.style.display = 'none'; // Sembunyikan video
+            const imageElement = document.createElement('img');
+            const imageDataURL = canvas.toDataURL('image/jpeg');
+            imageElement.src = imageDataURL;
+            imageElement.style.borderRadius = '5px';
+            videoElement.parentNode.replaceChild(imageElement, videoElement);
+            
+            // Ambil data gambar sebagai blob
+            canvas.toBlob(async function(blob) {
+                // Buat objek FormData dan tambahkan blob gambar ke dalamnya
+                const formData = new FormData();
+                formData.append('image', blob);
+
+                // Kirim permintaan POST dengan FormData yang berisi blob gambar
+                const response = await fetch('/startDetection', { method: 'POST',body: formData });
+                const data = await response.json();
+                const gambar = data.image_url;
+                // Ubah sumber gambar pada elemen <img> dengan hasil deteksi dari server Flask
+                imageElement.src = gambar;
+            }, 'image/jpeg');
+
+            // Hapus file-file dalam folder "Testing"
+            //await fetch('/deleteTestingFiles', { method: 'POST' });
+        });
+        document.getElementById("resetCamera").addEventListener("click", function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
